@@ -25,3 +25,11 @@ Predict next 28 days of units per synthetic SKU, compare safe baselines and illu
 
 ## Monitoring / production gaps
 Real ingestion, feature drift, bias and promotion sensitivity, uncertainty calibration, backtesting on external real demand, price experiment design, auth, permissions, audit logging and deployment are not included.
+
+## Descriptive forecast uncertainty band (added)
+
+For the validation-selected forecast method, the system collects absolute residuals from the four chronological validation folds. The order-statistic 90% target absolute error provides a symmetric, nonnegative lower/upper demand band per day. The untouched 28-day holdout records **observed empirical coverage**. Bands are calibrated on the same folds used for model selection, with no distribution-shift correction and no guarantee of 90% future coverage; they are descriptive, not certified prediction intervals. This is not a conformal guarantee or a replacement for real-demand calibration.
+
+## Inventory-position policy (added)
+
+The optional `GET /api/inventory/{sku}/plan` endpoint includes on-order, allocated and backordered units in inventory position. It rounds candidate order quantity to case-pack multiples and caps it at a supplied maximum; shortages or caps trigger manual review. Operational stock ledgers and purchase-order execution are explicitly out of scope.

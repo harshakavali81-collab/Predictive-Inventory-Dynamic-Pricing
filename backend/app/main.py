@@ -7,6 +7,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from src.pipeline import build_report
 from src.inventory.replenishment import recommend
+from src.inventory.position import plan_order
 from src.pricing.scenarios import simulate
 
 app = FastAPI(title="InventoryIQ | Demand, Stock and Pricing API", version="1.1.0",
@@ -61,6 +62,25 @@ def inventory(sku: str, stock: int | None = Query(default=None, ge=0, le=1000000
 def pricing(sku: str, elasticity: float = Query(default=-1.4, ge=-4, le=-0.1)):
     p = product(sku)
     return simulate(p["price"], p["cost"], sum(p["model"]["future_forecast"]), elasticity)
+
+
+@app.get("/api/inventory/{sku}/plan")
+def inventory_plan(sku: str,
+                   stock: int = Query(ge=0, le=1000000),
+                   on_order: int = Query(default=0, ge=0, le=1000000),
+                   allocated: int = Query(default=0, ge=0, le=1000000),
+                   backorders: int = Query(default=0, ge=0, le=1000000),
+                   pack_size: int = Query(default=1, ge=1, le=10000),
+                   max_order: int = Query(default=10000, ge=0, le=1000000)):
+    """Read-only inventory-position scenarios, never actual purchase orders."""
+    p = product(sku)
+    from src.ingestion.generate import CATALOG
+    lead = next(c["lead_days"] for c in CATALOG if c["sku"] == sku)
+    if allocated > stock:
+        raise HTTPException(status_code=422, detail="Allocated stock exceeds on-hand quantity")
+    return plan_order(p["model"]["future_forecast"], [r["units"] for r in p["history"]],
+                      on_hand=stock, lead_days=lead, on_order=on_order, allocated=allocated,
+                      backorders=backorders, pack_size=pack_size, max_order=max_order)
 
 # The generated synthetic report is a static asset for the same-origin frontend.
 # Nothing accepts edits or executes operational price/stock changes.

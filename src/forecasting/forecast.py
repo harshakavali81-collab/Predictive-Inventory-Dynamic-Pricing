@@ -5,6 +5,7 @@ Training never reads evaluation targets. Holdout is untouched during model choic
 from __future__ import annotations
 import math
 from statistics import mean
+from src.forecasting.uncertainty import residual_band, observed_coverage
 
 def predict(history: list[int], horizon: int, model: str) -> list[float]:
     if len(history) < 14 or horizon < 1 or horizon > 90:
@@ -39,21 +40,28 @@ def backtest(values: list[int], horizon: int = 28, folds: int = 4, window: int =
         raise ValueError("Not enough history for chronological validation and test")
     trainval, holdout = values[:-horizon], values[-horizon:]
     errors = {"seasonal_naive": [], "weekday_smoothed": []}
+    residuals = {"seasonal_naive": [], "weekday_smoothed": []}
     for fold in range(folds):
         end = len(trainval) - (folds - fold - 1) * window
         hist = trainval[:end - window]
         truth = trainval[end - window:end]
         for model in errors:
-            errors[model].append(error_metrics(truth, predict(hist, window, model))["mae"])
+            fold_predictions = predict(hist, window, model)
+            errors[model].append(error_metrics(truth, fold_predictions)["mae"])
+            residuals[model].extend(abs(a-b) for a,b in zip(truth,fold_predictions))
     mean_mae = {model: round(mean(vals), 3) for model, vals in errors.items()}
     selected = min(mean_mae, key=lambda model: (mean_mae[model], model != "seasonal_naive"))
     test_pred = predict(trainval, horizon, selected)
     baseline_pred = predict(trainval, horizon, "seasonal_naive")
     future = predict(values, horizon, selected)
+    future_interval = residual_band(residuals[selected], future)
+    test_interval = residual_band(residuals[selected], test_pred)
     return {
         "selected_model": selected, "validation_folds": folds, "validation_mae": mean_mae,
         "holdout_days": horizon, "holdout": error_metrics(holdout, test_pred),
         "baseline_holdout": error_metrics(holdout, baseline_pred),
         "holdout_actual": holdout, "holdout_predicted": test_pred,
-        "future_forecast": [round(v, 2) for v in future]
+        "future_forecast": [round(v, 2) for v in future],
+        "future_interval": future_interval,
+        "holdout_interval_coverage": observed_coverage(holdout,test_interval["lower"],test_interval["upper"])
     }

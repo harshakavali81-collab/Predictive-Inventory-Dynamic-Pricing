@@ -34,3 +34,9 @@ flowchart LR
 Sales data and catalog are synthetic. The service-level value is a target input, not a verified achieved fill rate. Gross profit excludes marketing, shipping, taxes, returns and fixed costs. A causal pricing experiment, fairness review, elasticity calibration, forecasting monitoring, authentication, authorization and operational integration would be needed before real-world price updates.
 
 ![Architecture](visuals/01-platform-overview.svg)
+
+## Review-only advanced planning
+
+`src/inventory/position.py` also supports an inventory-position scenario:
+`position = on_hand − allocated + on_order − backorders`. It is compared against the forecast-based reorder point, then any suggested order is rounded to whole pack sizes and capped at a maximum quantity. No order is transmitted to merchants. The forecast pipeline now includes a 90%-target **descriptive validation-residual uncertainty band**, explicitly not a statistical coverage guarantee.
+
