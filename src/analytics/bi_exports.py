@@ -18,9 +18,10 @@ def export_powerbi_tables(rows: list[dict], report: dict, out: str | Path) -> li
     known={p["sku"] for p in report["products"]}
     if known - set(catalog):
         raise ValueError("Cannot export unknown product metadata")
+    reported={p["sku"]: p for p in report["products"]}
     products=[{"sku":sku, "product_name":catalog[sku]["name"],"category":catalog[sku]["category"],
-               "lead_days":catalog[sku]["lead_days"],"reference_price":catalog[sku]["price"],
-               "unit_cost":catalog[sku]["cost"],"example_on_hand":catalog[sku]["stock"]}
+               "lead_days":catalog[sku]["lead_days"],"reference_price":reported[sku]["price"],
+               "unit_cost":reported[sku]["cost"],"example_on_hand":catalog[sku]["stock"]}
               for sku in sorted(known)]
     dates=sorted(set(r["date"] for r in rows).union(
         d for p in report["products"] for d in p["forecast_dates"]))

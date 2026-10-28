@@ -24,11 +24,18 @@ def build_report(rows: list[dict] | None = None, *, source_label: str = "synthet
             raise ValueError(f"Unknown SKU: {sku}; configure catalog metadata before planning")
         item = catalog_by_sku[sku]
         model = backtest([r["units"] for r in history])
+        # CSV imports use their latest observed price/cost, not the example catalog prices.
+        # Example stock and lead times remain configured assumptions, not ERP snapshots.
+        ref_price = item["price"] if source_label == "synthetic-demo" else float(history[-1]["price"])
+        ref_cost = item["cost"] if source_label == "synthetic-demo" else float(history[-1]["unit_cost"])
         inventory = recommend(model["future_forecast"], [r["units"] for r in history], item["stock"], item["lead_days"])
-        pricing = simulate(item["price"], item["cost"], sum(model["future_forecast"]))
+        pricing = simulate(ref_price, ref_cost, sum(model["future_forecast"]))
         products.append({
             "sku": sku, "name": item["name"], "category": item["category"],
-            "price": item["price"], "cost": item["cost"], "history": history[-70:],
+            "price": ref_price, "cost": ref_cost,
+            "reference_price_source": "sample_catalog" if source_label == "synthetic-demo" else "most_recent_observation",
+            "inventory_metadata_source": "illustrative_catalog_assumptions",
+            "history": history[-70:],
             "model": model, "inventory": inventory, "pricing": pricing,
             "forecast_dates": [(latest_day + timedelta(days=i + 1)).isoformat() for i in range(28)]
         })
