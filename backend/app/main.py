@@ -1,0 +1,56 @@
+"""Read-only API. All values are generated from synthetic examples."""
+from functools import lru_cache
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from src.pipeline import build_report
+from src.inventory.replenishment import recommend
+from src.pricing.scenarios import simulate
+
+app = FastAPI(title="InventoryIQ | Demand, Stock and Pricing API", version="1.0.0",
+              description="Synthetic-data educational prototype. No automated price or stock changes.")
+app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:8000", "http://127.0.0.1:8000",
+    "http://localhost:5173", "http://127.0.0.1:5173"], allow_methods=["GET"], allow_headers=["*"])
+
+@lru_cache(maxsize=1)
+def report():
+    return build_report()
+
+def product(sku: str):
+    for item in report()["products"]:
+        if item["sku"] == sku:
+            return item
+    raise HTTPException(404, "Unknown SKU")
+
+@app.get("/api/health")
+def health():
+    return {"status": "ok", "mode": "synthetic-demo"}
+
+@app.get("/api/overview")
+def overview():
+    r = report()
+    return {"as_of": r["as_of"], "overview": r["overview"],
+            "products": [{"sku": p["sku"], "name": p["name"],
+                "wape": p["model"]["holdout"]["wape"],
+                "order_quantity": p["inventory"]["order_quantity"],
+                "risk": p["inventory"]["stockout_risk_proxy"]} for p in r["products"]],
+            "limitations": r["limitations"]}
+
+@app.get("/api/forecast/{sku}")
+def forecast(sku: str):
+    p = product(sku)
+    return {"sku": sku, "dates": p["forecast_dates"], "model": p["model"], "history": p["history"]}
+
+@app.get("/api/inventory/{sku}")
+def inventory(sku: str, stock: int | None = Query(default=None, ge=0, le=10000000)):
+    p = product(sku)
+    if stock is None:
+        return p["inventory"]
+    from src.ingestion.generate import CATALOG
+    lead_days = next(x["lead_days"] for x in CATALOG if x["sku"] == sku)
+    return recommend(p["model"]["future_forecast"], [r["units"] for r in p["history"]],
+                     stock, lead_days)
+
+@app.get("/api/pricing/{sku}")
+def pricing(sku: str, elasticity: float = Query(default=-1.4, ge=-4, le=-0.1)):
+    p = product(sku)
+    return simulate(p["price"], p["cost"], sum(p["model"]["future_forecast"]), elasticity)
