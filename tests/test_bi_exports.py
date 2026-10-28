@@ -12,13 +12,17 @@ class PowerBIExportTests(unittest.TestCase):
         report=build_report(sales)
         with tempfile.TemporaryDirectory() as folder:
             paths=export_powerbi_tables(sales,report,Path(folder))
-            self.assertEqual(len(paths),5)
+            self.assertEqual(len(paths),7)
             asrows=lambda path:list(csv.DictReader(path.open(newline="",encoding="utf-8")))
             tables={p.name:asrows(p) for p in paths}
             self.assertEqual(len(tables["DimProduct.csv"]),8)
             self.assertEqual(len(tables["FactSales.csv"]),3360)
             self.assertEqual(len(tables["FactForecast.csv"]),8*28)
             self.assertEqual(len(tables["FactModelQuality.csv"]),8)
+            self.assertEqual(len(tables["FactInventory.csv"]),8)
+            self.assertTrue(len(tables["FactPricingScenario.csv"])>=8)
+            self.assertTrue(all(r["data_mode"]=="synthetic-demo" for r in tables["FactPricingScenario.csv"]))
+            self.assertTrue(all(float(r["gross_margin_pct"])>=20 for r in tables["FactPricingScenario.csv"]))
             self.assertTrue(all(x["data_mode"]=="synthetic-demo" for x in tables["FactForecast.csv"]))
             self.assertEqual(sum(int(x["units"]) for x in tables["FactSales.csv"]),report["overview"]["units"])
             self.assertEqual(len({x["date"] for x in tables["DimDate.csv"]}),len(tables["DimDate.csv"]))

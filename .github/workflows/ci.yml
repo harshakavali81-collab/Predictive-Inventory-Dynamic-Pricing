@@ -29,6 +29,8 @@ jobs:
           python -c "import sqlite3; c=sqlite3.connect('data/generated/inventoryiq.db'); assert c.execute('select count(*) from daily_sales').fetchone()[0] == 3360"
           test -s data/generated/bi/FactForecast.csv
           test -s data/generated/bi/DimProduct.csv
+          test -s data/generated/bi/FactPricingScenario.csv
+          test -s data/generated/bi/FactInventory.csv
       - name: Docker container smoke test
         run: |
           docker build --tag inventoryiq:ci .
