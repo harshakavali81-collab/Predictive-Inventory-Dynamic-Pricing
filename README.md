@@ -30,6 +30,14 @@
 - Responsive, dependency-free static dashboard with editable product, on-hand units and elasticity sliders.
 - Tests, CI configuration, architecture/model/data documentation and ten original vector figures.
 
+## Latest verified additions
+
+- **Direct Python-dashboard connection:** When the generated `frontend/report.json` is present, the browser visualizes the Python 28-day forecasts and their sealed-holdout WAPE rather than its offline fallback; CSV export is enabled in that mode.
+- **SQL warehouse:** SQLite views and [analytical SQL queries](sql/queries.sql), with constraints and repeatable local exports.
+- **BI exports:** Five Power BI-ready [star-schema tables](powerbi/README.md) are generated under `data/generated/bi/`; no native PBIX is claimed.
+- **Local private ingestion:** `python -m scripts.run_pipeline --input /path/to/authorized.csv --output data/generated/local_report.json --sqlite data/generated/local.sqlite` checks schema and complete SKU histories. Imported data is **not** copied into the public frontend.
+- **Deployment:** [GitHub Pages public-demo workflow](.github/workflows/pages.yml), plus [Docker local API/demo](docs/DEPLOYMENT.md). Production deployment and actual merchant integration are separate requirements.
+
 ## Quick start (Python 3.11+)
 
 ```bash
@@ -66,6 +74,8 @@ inventory-demand-pricing/
 │   ├── index.html                       # interactive offline demo
 │   ├── app.js
 │   └── style.css
+├── sql/                                 # SQLite schema and reporting queries
+├── Dockerfile + docker-compose.yml      # local, localhost-only API and demo
 ├── notebooks/                           # EDA, seasonality, model comparison
 ├── powerbi/README.md                    # Power BI import + DAX guide
 ├── scripts/run_pipeline.py
@@ -137,7 +147,7 @@ See [runbook](docs/RUNBOOK.md) for API examples and how to import CSV into Power
 
 ## Deployment status
 
-- Source code and independent static browser demo: included in this repository.
+- Source code, read-only API and independent browser demo: included in this repository. Generated synthetic Python forecasts can feed the browser when report.json is available.
 - GitHub Pages: **requires the repository owner to enable Pages** (Settings → Pages → Deploy from branch → `main` / `/ (root)`). Then the example URL would be `https://harshakavali81-collab.github.io/Predictive-Inventory-Dynamic-Pricing/demo.html` — check it before sharing.
 - FastAPI: local only by default; no production cloud backend configured.
 - Real POS/ERP stock, sales, experiment-based elasticity, native `.pbix`, production authentication and external validation: **not implemented or verified**.

@@ -24,6 +24,11 @@ jobs:
         run: python -m scripts.run_pipeline
       - name: Validate generated JSON
         run: python -c "import json; r=json.load(open('data/generated/report.json')); assert r['mode']=='synthetic-demo'; assert len(r['products'])==8"
+      - name: Verify BI exports and SQLite warehouse
+        run: |
+          python -c "import sqlite3; c=sqlite3.connect('data/generated/inventoryiq.db'); assert c.execute('select count(*) from daily_sales').fetchone()[0] == 3360"
+          test -s data/generated/bi/FactForecast.csv
+          test -s data/generated/bi/DimProduct.csv
       - name: Verify JavaScript syntax
         run: node --check frontend/app.js
       - name: Upload test report data
@@ -33,4 +38,6 @@ jobs:
           path: |
             data/generated/report.json
             data/generated/synthetic_sales.csv
+            data/generated/inventoryiq.db
+            data/generated/bi/*.csv
           retention-days: 7

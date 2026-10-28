@@ -9,7 +9,6 @@ COPY backend/ backend/
 COPY scripts/ scripts/
 COPY frontend/ frontend/
 COPY sql/ sql/
-COPY data/ data/
 RUN mkdir -p data/generated && python -m scripts.run_pipeline
 RUN useradd --create-home --uid 10001 inventoryiq && chown -R inventoryiq:inventoryiq /app
 USER inventoryiq

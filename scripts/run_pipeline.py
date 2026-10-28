@@ -12,6 +12,7 @@ from src.ingestion.generate import generate_sales, save_csv, read_csv
 from src.pipeline import build_report
 from src.processing.validation import validate_sales
 from src.analytics.warehouse import export_warehouse
+from src.analytics.bi_exports import export_powerbi_tables
 
 def validate_continuous_daily_history(rows: list[dict]) -> None:
     grouped = defaultdict(list)
@@ -49,10 +50,11 @@ def main(args=None):
     options.output.parent.mkdir(parents=True, exist_ok=True)
     options.output.write_text(json.dumps(report, indent=2), encoding="utf-8")
     db = export_warehouse(sales, options.sqlite)
+    bi_tables = export_powerbi_tables(sales, report, options.output.parent / "bi")
     if not options.input:
         target = Path("frontend/report.json")
         target.write_text(json.dumps(report, separators=(",", ":")), encoding="utf-8")
-    print("Mode:", source, "Rows:", len(sales), "Products:", len(report["products"]), "Warehouse:", db)
+    print("Mode:", source, "Rows:", len(sales), "Products:", len(report["products"]), "Warehouse:", db, "BI tables:", len(bi_tables))
     for product in report["products"]:
         print(product["sku"], product["model"]["selected_model"],
               "holdout WAPE=", product["model"]["holdout"]["wape"])
