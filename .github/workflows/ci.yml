@@ -29,6 +29,28 @@ jobs:
           python -c "import sqlite3; c=sqlite3.connect('data/generated/inventoryiq.db'); assert c.execute('select count(*) from daily_sales').fetchone()[0] == 3360"
           test -s data/generated/bi/FactForecast.csv
           test -s data/generated/bi/DimProduct.csv
+      - name: Docker container smoke test
+        run: |
+          docker build --tag inventoryiq:ci .
+          docker run --detach --rm --name inventoryiq-ci -p 127.0.0.1:18000:8000 inventoryiq:ci
+          python - <<'PY'
+          from urllib.request import urlopen
+          from time import sleep
+          from urllib.error import URLError
+          for attempt in range(30):
+              try:
+                  with urlopen("http://127.0.0.1:18000/api/health", timeout=3) as response:
+                      assert response.status == 200
+                      print("Local container health OK")
+                      break
+              except (URLError,TimeoutError):
+                  sleep(1)
+          else:
+              raise RuntimeError("Container health endpoint did not become ready")
+          PY
+      - name: Clean up Docker container
+        if: always()
+        run: docker rm --force inventoryiq-ci || true
       - name: Verify JavaScript syntax
         run: node --check frontend/app.js
       - name: Upload test report data
