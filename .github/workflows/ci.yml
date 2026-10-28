@@ -41,13 +41,18 @@ jobs:
               try:
                   with urlopen("http://127.0.0.1:18000/api/health", timeout=3) as response:
                       assert response.status == 200
-                      print("Local container health OK")
+                      print("Local container health OK", response.read().decode("utf-8"))
                       break
-              except (URLError,TimeoutError):
+              except OSError as exc:
+                  # The service may be starting; TCP can refuse OR reset a connection.
+                  print(f"Health retry {attempt + 1}/30: {exc}")
                   sleep(1)
           else:
-              raise RuntimeError("Container health endpoint did not become ready")
+              raise RuntimeError("Container health endpoint did not become ready after 30 attempts")
           PY
+      - name: Container diagnostic logs
+        if: failure()
+        run: docker logs --tail=100 inventoryiq-ci || true
       - name: Clean up Docker container
         if: always()
         run: docker rm --force inventoryiq-ci || true
