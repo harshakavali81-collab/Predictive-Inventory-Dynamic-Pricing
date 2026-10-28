@@ -113,6 +113,10 @@ flowchart LR
 
 Figures are original explanatory SVGs with illustrative patterns, **not captured results from executed experiments**. For numerical reports, run the actual Python pipeline.
 
+## Verified synthetic results
+
+GitHub Actions completed **18 passing Python/API tests** and generated **3,360 deterministic synthetic rows across 8 SKUs**. On the final 28-day holdout, the selected-model WAPE ranged from **10.006% to 20.296%** across the eight synthetic products. These are illustrative model-validation results, **not evidence of real-store accuracy**. See [all eight verified SKU results](docs/VERIFIED_RESULTS.md) and [the CI run](https://github.com/harshakavali81-collab/Predictive-Inventory-Dynamic-Pricing/actions/runs/40654347916).
+
 ## Model & business interpretation
 
 `src/forecasting/forecast.py` selects the lower-MAE forecast on four growing-window folds and then reports selected-model and seasonal-baseline errors on the untouched final 28-day test. WAPE is undefined when the actual holdout total is zero; that value is returned as `null`, rather than fabricated. Once evaluated, it forecasts 28 future days using the complete history.
