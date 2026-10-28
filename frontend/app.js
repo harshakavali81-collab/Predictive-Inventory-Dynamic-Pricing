@@ -16,10 +16,13 @@ $("sku").innerHTML=PRODUCTS.map(p=>'<option value="'+p.sku+'">'+p.sku+" · "+p.n
 function syntheticHistory(p){const seed=PRODUCTS.findIndex(x=>x.sku===p.sku);return Array.from({length:70},(_,i)=>Math.max(0,Math.round(p.demand*(1+0.17*Math.sin(i*0.24+seed)+0.10*Math.cos(i*0.85+seed*2)+0.10*Math.sin(i*2*Math.PI/7)))));}
 function forecast(history){return Array.from({length:28},(_,i)=>{const past=[0,1,2,3,4,5,6].map(w=>history[history.length-7*(w+1)+(i%7)]);return Math.max(0,Math.round(past.reduce((s,v,index)=>s+v*(7-index),0)/28));});}
 function pricing(p,total,elasticity){return [-.10,-.05,0,.05,.10].map(change=>{const price=Math.round(p.price*(1+change)*100)/100,margin=(price-p.cost)/price,units=total*Math.pow(price/p.price,elasticity);return {change:Math.round(change*100),price,units,profit:units*(price-p.cost),margin};}).filter(x=>x.margin>=.20-1e-9);}
-function drawTrend(history,future){const W=860,H=280,L=42,R=16,T=18,B=32,all=history.concat(future),max=Math.max(10,Math.max(...all)*1.15);const x=i=>L+i*(W-L-R)/(all.length-1),y=v=>H-B-v*(H-T-B)/max;
+function drawTrend(history,future,band){const W=860,H=280,L=42,R=16,T=18,B=32,all=history.concat(future),max=Math.max(10,Math.max(...all,...(band?.upper||[]))*1.15);const x=i=>L+i*(W-L-R)/(all.length-1),y=v=>H-B-v*(H-T-B)/max;
 const poly=(arr,start)=>arr.map((v,i)=>(i?"L":"M")+x(i+start).toFixed(1)+" "+y(v).toFixed(1)).join(" ");
+const ribbon=band&&Array.isArray(band.lower)&&Array.isArray(band.upper)&&band.lower.length===future.length&&band.upper.length===future.length
+? '<polygon points="'+band.upper.map((v,i)=>x(history.length+i).toFixed(1)+','+y(v).toFixed(1)).concat(band.lower.map((v,i)=>x(history.length+future.length-1-i).toFixed(1)+','+y(band.lower[future.length-1-i]).toFixed(1))).join(' ')+'" fill="#ffc178" opacity=".16"/>'
+: '';
 const grids=[0,.25,.5,.75,1].map(f=>'<line x1="'+L+'" y1="'+y(max*f)+'" x2="'+(W-R)+'" y2="'+y(max*f)+'" stroke="#284356" stroke-dasharray="3 8"/><text x="'+(L-10)+'" y="'+(y(max*f)+4)+'" text-anchor="end" font-size="11" fill="#92afc0">'+Math.round(max*f)+'</text>').join("");
-$("trend-chart").innerHTML=grids+'<rect x="'+x(history.length-1)+'" y="'+T+'" width="'+(W-R-x(history.length-1))+'" height="'+(H-T-B)+'" fill="#ffc178" opacity=".05"/><line x1="'+x(history.length-1)+'" y1="'+T+'" x2="'+x(history.length-1)+'" y2="'+(H-B)+'" stroke="#ffc178" stroke-dasharray="5 6"/><path d="'+poly(history,0)+'" fill="none" stroke="#64ebcb" stroke-width="3" stroke-linejoin="round"/><path d="'+poly([history.at(-1),...future],history.length-1)+'" fill="none" stroke="#ffc178" stroke-width="3" stroke-linejoin="round"/><text x="'+L+'" y="'+(H-7)+'" font-size="11" fill="#92afc0">70 synthetic historical days</text><text x="'+(W-R)+'" y="'+(H-7)+'" text-anchor="end" font-size="11" fill="#ffc178">28 illustrative forecast days</text>';}
+$("trend-chart").innerHTML=grids+ribbon+'<rect x="'+x(history.length-1)+'" y="'+T+'" width="'+(W-R-x(history.length-1))+'" height="'+(H-T-B)+'" fill="#ffc178" opacity=".05"/><line x1="'+x(history.length-1)+'" y1="'+T+'" x2="'+x(history.length-1)+'" y2="'+(H-B)+'" stroke="#ffc178" stroke-dasharray="5 6"/><path d="'+poly(history,0)+'" fill="none" stroke="#64ebcb" stroke-width="3" stroke-linejoin="round"/><path d="'+poly([history.at(-1),...future],history.length-1)+'" fill="none" stroke="#ffc178" stroke-width="3" stroke-linejoin="round"/><text x="'+L+'" y="'+(H-7)+'" font-size="11" fill="#92afc0">70 synthetic historical days</text><text x="'+(W-R)+'" y="'+(H-7)+'" text-anchor="end" font-size="11" fill="#ffc178">28 illustrative forecast days</text>';}
 function render(){const p=PRODUCTS.find(p=>p.sku===$("sku").value)||PRODUCTS[0];const stock=Math.max(0,Math.min(100000,Math.round(Number($("stock").value)||0)));const elasticity=Number($("elasticity").value);
 const record=pipelineReport?.products?.find(item=>item.sku===p.sku);
 const history=record?record.history.map(item=>item.units):syntheticHistory(p);
@@ -35,10 +38,30 @@ $("inventory-graphic").innerHTML='<div class="bar-track"><div class="bar-fill" s
 $("elasticity-value").textContent=elasticity.toFixed(1);const rows=pricing(p,total,elasticity),best=rows.reduce((a,b)=>b.profit>a.profit?b:a,rows[0]);
 $("pricing-winner").innerHTML='<span>Highest simulated gross profit candidate</span><strong>'+INR(best.price)+' / unit</strong><span>'+((best.change>0?"+":"")+best.change)+'% price change · '+INR(best.profit)+' hypothetical profit</span>';
 $("scenario-table").innerHTML=rows.map(s=>'<tr class="'+(s===best?"best":"")+'"><td class="'+(s.change>=0?"up":"down")+'">'+(s.change>0?"+":"")+s.change+'%</td><td>'+INR(s.price)+'</td><td>'+N(s.units)+'</td><td>'+INR(s.profit)+'</td><td>'+Math.round(s.margin*100)+'%</td></tr>').join("");
-drawTrend(history,future);
+drawTrend(history,future,record?.model?.future_interval);
+$("interval-note").textContent=record?.model?.future_interval
+  ? "Python validation-residual error band (90% nominal target, no guaranteed coverage). Sealed-holdout observed coverage: "+Math.round(100*record.model.holdout_interval_coverage)+"% on synthetic demand."
+  : "No calibrated band in offline illustration; run the Python pipeline for a descriptive validation-residual error band.";
+function numberInput(id, fallback=0){const x=Math.floor(Number($(id).value));return Number.isFinite(x)?Math.max(0,Math.min(1000000,x)):fallback;}
+const onOrder=numberInput("on-order"), allocated=numberInput("allocated"), backorders=numberInput("backorders"),
+  pack=Math.max(1,numberInput("pack-size",1)), maximum=numberInput("max-order",10000);
+if(allocated>stock){
+  $("inventory-position").textContent="Invalid";
+  $("advanced-quantity").textContent="—";
+  $("advanced-warning").textContent="Allocations exceed stock";
+}else{
+  const pos=stock-allocated+onOrder-backorders, need=pos<=point?Math.max(0,target-pos):0;
+  const proposed=Math.ceil(need/pack)*pack, permitted=Math.floor(maximum/pack)*pack,
+    suggested=Math.min(proposed,permitted), review=suggested<need||pos<0;
+  $("inventory-position").textContent=N(pos)+" units";
+  $("advanced-quantity").textContent=N(suggested)+" units";
+  $("advanced-warning").textContent=review?"Manual review required":need?"Scenario within limits":"No new order suggested";
+}
 }
 $("sku").addEventListener("change",()=>{$("stock").value=PRODUCTS.find(p=>p.sku===$("sku").value).stock;render();});
-$("stock").addEventListener("input",render);$("elasticity").addEventListener("input",render);render();
+$("stock").addEventListener("input",render);$("elasticity").addEventListener("input",render);
+["on-order","allocated","backorders","pack-size","max-order"].forEach(id=>$(id).addEventListener("input",render));
+render();
 
 function saveProductForecast(){
 const p=PRODUCTS.find(x=>x.sku===$("sku").value),data=pipelineReport?.products?.find(x=>x.sku===p.sku);
