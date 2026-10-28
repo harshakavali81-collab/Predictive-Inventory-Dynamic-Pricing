@@ -48,6 +48,13 @@ jobs:
             echo "enabled=false" >> "${GITHUB_OUTPUT}"
             echo "::notice::GitHub Pages is not enabled or currently inaccessible. In Settings → Pages, choose Source: GitHub Actions; re-run this workflow after activation."
           fi
+      - name: Upload independently hostable static artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventoryiq-static-site
+          path: _site/
+          if-no-files-found: error
+          retention-days: 14
       - name: Configure Pages
         if: steps.pages_status.outputs.enabled == 'true'
         uses: actions/configure-pages@v5

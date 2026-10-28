@@ -30,6 +30,15 @@
 - Responsive, dependency-free static dashboard with editable product, on-hand units and elasticity sliders.
 - Tests, CI configuration, architecture/model/data documentation and ten original vector figures.
 
+## Release evidence and extended functionality
+
+- [Readiness & explicit remaining external work](docs/RELEASE_READINESS.md)
+- [Read-only API contract](docs/API_CONTRACT.md)
+- [Change history](CHANGELOG.md)
+- **Review-first inventory-position planner** handles allocated, on-order and backordered stock, case-pack multiples, and quantity caps.
+- **Descriptive validation-residual error bands** accompany next-28-day forecasts; they have no guaranteed coverage.
+- **Independent static build artifact** can be downloaded from Pages workflow, even when repository Pages is not yet activated.
+
 ## Latest expanded CI verification
 
 **29 Python and API tests passed** in [the expanded GitHub Actions run](https://github.com/harshakavali81-collab/Predictive-Inventory-Dynamic-Pricing/actions/runs/40656569570). The run generated a SQLite database, 3,360 synthetic sales rows, five BI tables and a 28-day forecast per SKU. These checks verify the synthetic prototype, not external business performance.

@@ -1,0 +1,1 @@
+from scripts.check_static_assets import StaticAssetTests

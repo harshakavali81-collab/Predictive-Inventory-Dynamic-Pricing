@@ -38,3 +38,7 @@ Use only data you are authorized to process. Import checks required schema, date
 - No native Power BI Desktop file.
 
 Production release would require authorized stores, time-stamped inventory snapshots, stockout censored-demand handling, experiments, calibration, secrets management, backup/restore, audit logs, IAM, domain security review, real-world monitoring and stakeholder approval.
+
+## Hostable static build even if Pages is not activated
+
+The Pages workflow produces an `inventoryiq-static-site` artifact using `actions/upload-artifact`. Download it from the run details to deploy the synthetic-only frontend with the same folder structure to any static host. A passing **build/artifact** step is not proof of a public Pages deployment.
