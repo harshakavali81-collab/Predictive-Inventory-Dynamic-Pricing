@@ -9,7 +9,9 @@ from src.inventory.replenishment import recommend
 from src.pricing.scenarios import simulate
 from src.analytics.report import summarize
 
-def build_report(rows: list[dict] | None = None) -> dict:
+def build_report(rows: list[dict] | None = None, *, source_label: str = "synthetic-demo") -> dict:
+    if source_label not in ("synthetic-demo", "imported-local-csv"):
+        raise ValueError("Unsupported data source label")
     validated = validate_sales(generate_sales() if rows is None else rows)
     grouped = defaultdict(list)
     for row in validated:
@@ -30,11 +32,13 @@ def build_report(rows: list[dict] | None = None) -> dict:
             "model": model, "inventory": inventory, "pricing": pricing,
             "forecast_dates": [(latest_day + timedelta(days=i + 1)).isoformat() for i in range(28)]
         })
-    return {"project": "InventoryIQ", "mode": "synthetic-demo", "generated_from": "fixed-seed synthetic sales",
+    return {"project": "InventoryIQ", "mode": source_label,
+            "generated_from": "fixed-seed synthetic sales" if source_label == "synthetic-demo" else "user-supplied local CSV (unverified)",
             "as_of": latest_day.isoformat(), "overview": summarize(validated), "products": products,
             "limitations": [
-                "Synthetic transactions, not real demand or commercial performance.",
+                "No valid real-world demand performance is established by these results.",
                 "Pricing elasticity is assumed; no causal evaluation or real-world price optimization.",
                 "Stock and lead times are sample settings, not integrated ERP inventory.",
-                "Holdout metrics are out-of-sample for the chosen validation-selected model, not external validation."
+                "Holdout metrics are out-of-sample for the chosen validation-selected model, not external validation.",
+                "Observed sales may be censored by stockouts; promotions and returns require additional handling."
             ]}
