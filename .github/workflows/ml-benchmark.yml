@@ -1,0 +1,37 @@
+name: Optional RandomForest time-series benchmark
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/forecasting/ml_benchmark.py"
+      - "src/forecasting/forecast.py"
+      - "tests/test_ml_benchmark.py"
+      - "scripts/run_ml_benchmark.py"
+      - "requirements-ml.txt"
+      - ".github/workflows/ml-benchmark.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ml:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install optional scikit-learn benchmark
+        run: python -m pip install -r requirements-ml.txt
+      - name: Validate strictly past-only feature and synthetic holdout
+        run: python -m unittest tests.test_ml_benchmark -v
+      - name: Train one-SKU benchmark and save results
+        run: python -m scripts.run_ml_benchmark --sku ELEC-101 --trees 48
+      - name: Validate generated model report
+        run: |
+          python -c "import json; r=json.load(open('data/generated/ml_benchmark.json')); assert r['dataset_mode']=='synthetic-demo'; assert len(r['predicted'])==28"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: optional-synthetic-randomforest-evaluation
+          path: data/generated/ml_benchmark.json
+          retention-days: 14

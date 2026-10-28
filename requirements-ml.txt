@@ -1,0 +1,2 @@
+# Optional. The core application and its 46+ unit tests do not depend on scikit-learn.
+scikit-learn>=1.5,<2.0
