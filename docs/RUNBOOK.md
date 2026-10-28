@@ -25,6 +25,10 @@ Open `frontend/index.html` directly in a browser for the **independent offline s
 | GET | `/api/inventory/ELEC-101?stock=210` | Replenishment scenario |
 | GET | `/api/pricing/ELEC-101?elasticity=-1.4` | Guardrailed pricing sensitivity |
 
+## Reproducible warehouse and BI
+
+After running the pipeline, `data/generated/inventoryiq.db` provides SQL queries/views; `data/generated/bi/` contains five Power BI-ready star-schema CSVs. Both remain local unless you manually publish the **synthetic sample**. Never upload authorized private sales CSVs or imported reports to GitHub Pages.
+
 ## Evidence and checks
 
 ```bash

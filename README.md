@@ -30,6 +30,10 @@
 - Responsive, dependency-free static dashboard with editable product, on-hand units and elasticity sliders.
 - Tests, CI configuration, architecture/model/data documentation and ten original vector figures.
 
+## Latest expanded CI verification
+
+**29 Python and API tests passed** in [the expanded GitHub Actions run](https://github.com/harshakavali81-collab/Predictive-Inventory-Dynamic-Pricing/actions/runs/40656569570). The run generated a SQLite database, 3,360 synthetic sales rows, five BI tables and a 28-day forecast per SKU. These checks verify the synthetic prototype, not external business performance.
+
 ## Latest verified additions
 
 - **Direct Python-dashboard connection:** When the generated `frontend/report.json` is present, the browser visualizes the Python 28-day forecasts and their sealed-holdout WAPE rather than its offline fallback; CSV export is enabled in that mode.

@@ -1,5 +1,8 @@
 # Verified synthetic-pipeline results
 
+An expanded CI run on October 28, 2026 also passed **29 tests** and verified the SQLite warehouse plus five Power BI-ready export tables. [View the expanded successful workflow](https://github.com/harshakavali81-collab/Predictive-Inventory-Dynamic-Pricing/actions/runs/40656569570). The earlier per-SKU WAPE metrics below are from the identical deterministic synthetic generator.
+
+
 **Evidence:** [GitHub Actions run #1](https://github.com/harshakavali81-collab/Predictive-Inventory-Dynamic-Pricing/actions/runs/40654347916), 2026-10-28. The CI job concluded **success**, executed **18 Python/API tests**, generated 3,360 synthetic daily product observations and checked JavaScript syntax.
 
 ## Last-28-day holdout results

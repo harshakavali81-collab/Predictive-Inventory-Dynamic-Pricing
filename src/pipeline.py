@@ -34,7 +34,7 @@ def build_report(rows: list[dict] | None = None, *, source_label: str = "synthet
         })
     return {"project": "InventoryIQ", "mode": source_label,
             "generated_from": "fixed-seed synthetic sales" if source_label == "synthetic-demo" else "user-supplied local CSV (unverified)",
-            "as_of": latest_day.isoformat(), "overview": summarize(validated), "products": products,
+            "as_of": latest_day.isoformat(), "overview": summarize(validated, data_source=source_label), "products": products,
             "limitations": [
                 "No valid real-world demand performance is established by these results.",
                 "Pricing elasticity is assumed; no causal evaluation or real-world price optimization.",
