@@ -1,0 +1,36 @@
+name: InventoryIQ reproducibility
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  test-and-report:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install demo API dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run Python unit and API tests
+        run: python -m unittest discover -s tests -v
+      - name: Generate reproducible synthetic artifacts
+        run: python -m scripts.run_pipeline
+      - name: Validate generated JSON
+        run: python -c "import json; r=json.load(open('data/generated/report.json')); assert r['mode']=='synthetic-demo'; assert len(r['products'])==8"
+      - name: Verify JavaScript syntax
+        run: node --check frontend/app.js
+      - name: Upload test report data
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-planning-report
+          path: |
+            data/generated/report.json
+            data/generated/synthetic_sales.csv
+          retention-days: 7
