@@ -1,0 +1,46 @@
+name: Publish InventoryIQ GitHub Pages demo
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: "inventoryiq-pages"
+  cancel-in-progress: true
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Use Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run tests and build synthetic reports
+        run: |
+          python -m unittest discover -s tests -v
+          python -m scripts.run_pipeline
+      - name: Assemble static Pages site
+        run: |
+          mkdir -p _site/frontend _site/docs/visuals
+          cp frontend/index.html frontend/app.js frontend/style.css frontend/report.json _site/frontend/
+          cp docs/visuals/*.svg _site/docs/visuals/
+          cp demo.html _site/demo.html
+          printf '%s\n' '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=demo.html"><title>InventoryIQ</title></head><body><p><a href="demo.html">Open InventoryIQ demo</a></p></body></html>' > _site/index.html
+          test -s _site/frontend/report.json
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy site
+        id: deployment
+        uses: actions/deploy-pages@v4

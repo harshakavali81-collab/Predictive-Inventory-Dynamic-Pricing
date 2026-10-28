@@ -1,0 +1,13 @@
+.git
+.github
+.venv
+__pycache__
+.pytest_cache
+docs
+notebooks
+powerbi
+tests
+*.pyc
+.env
+data/generated/
+frontend/report.json

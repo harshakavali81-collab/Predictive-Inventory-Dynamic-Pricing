@@ -1,12 +1,15 @@
-"""Read-only API. All values are generated from synthetic examples."""
+"""Read-only API and local demonstration static UI. Synthetic data only."""
 from functools import lru_cache
+from pathlib import Path
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from src.pipeline import build_report
 from src.inventory.replenishment import recommend
 from src.pricing.scenarios import simulate
 
-app = FastAPI(title="InventoryIQ | Demand, Stock and Pricing API", version="1.0.0",
+app = FastAPI(title="InventoryIQ | Demand, Stock and Pricing API", version="1.1.0",
               description="Synthetic-data educational prototype. No automated price or stock changes.")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:8000", "http://127.0.0.1:8000",
     "http://localhost:5173", "http://127.0.0.1:5173"], allow_methods=["GET"], allow_headers=["*"])
@@ -20,6 +23,10 @@ def product(sku: str):
         if item["sku"] == sku:
             return item
     raise HTTPException(404, "Unknown SKU")
+
+@app.get("/")
+def home():
+    return RedirectResponse(url="/demo/", status_code=307)
 
 @app.get("/api/health")
 def health():
@@ -54,3 +61,8 @@ def inventory(sku: str, stock: int | None = Query(default=None, ge=0, le=1000000
 def pricing(sku: str, elasticity: float = Query(default=-1.4, ge=-4, le=-0.1)):
     p = product(sku)
     return simulate(p["price"], p["cost"], sum(p["model"]["future_forecast"]), elasticity)
+
+# The generated synthetic report is a static asset for the same-origin frontend.
+# Nothing accepts edits or executes operational price/stock changes.
+app.mount("/demo", StaticFiles(directory=str(Path(__file__).resolve().parents[2] / "frontend"),
+                               html=True), name="demo")
