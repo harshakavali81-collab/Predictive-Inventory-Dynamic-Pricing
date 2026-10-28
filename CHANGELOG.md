@@ -13,3 +13,9 @@
 - Pages build workflow and deployment readiness checklist; public site activation not automatically assumed.
 
 This project is a synthetic-data educational demonstration. No production retail metrics or real price changes are claimed.
+
+## 1.3.0 — 2026-10-28
+
+- Added trained, recursive, strictly past-only Random Forest demand benchmark with dedicated scikit-learn test workflow.
+- Expanded BI exports to seven CSV tables, including stock and constrained price-scenario facts; scenario totals must not double-count mutually exclusive alternatives.
+- Verified 46 core tests and Docker health smoke test, plus three dedicated ML benchmark tests, before these documentation updates.

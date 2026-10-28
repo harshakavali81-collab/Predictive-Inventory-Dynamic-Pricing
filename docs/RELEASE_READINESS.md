@@ -5,10 +5,11 @@
 - Reproducible 420-day × 8-SKU generated sales pipeline, 3,360 daily product observations.
 - Sales schema validation, local CSV import safeguards, deterministic reports and provenance tags.
 - Expanding-window time-series model selection, sealed 28-day holdout, baseline metrics and descriptive forecast-error bands.
+- Optional scikit-learn RandomForest benchmark with trained strictly lagged features, recursive 28-day evaluation and dedicated reproducibility checks.
 - Inventory-position scenarios, safety-stock heuristics, allocations and backorders, order caps and case-pack rounding.
 - Assumption-based elasticity pricing with ±10% candidate changes and modeled ≥20% gross-margin guardrails. *No live price changes.*
 - FastAPI read-only forecasting, inventory and pricing endpoints.
-- SQLite warehouse and five Power BI-ready CSV star-schema tables.
+- SQLite warehouse and seven Power BI-ready CSV star-schema tables.
 - Browser dashboard, ten original SVG diagrams, three notebook examples and technical documentation.
 - CI builds a non-root Docker image and exercises the local API health endpoint.
 

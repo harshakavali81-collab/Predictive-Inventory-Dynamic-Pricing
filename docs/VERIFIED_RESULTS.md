@@ -23,3 +23,7 @@ The pipeline chooses between two baseline methods using four chronological valid
 These results are **algorithmic measurements on synthetic generated data**. They do not establish accuracy on real-world demand. WAPE should not be averaged across SKUs without considering the weighting definition. Reproduce or inspect the other MAE, sMAPE and baseline fields through `python -m scripts.run_pipeline` and the generated `data/generated/report.json`.
 
 No real revenue improvement, inventory cost savings, filled orders, true realized stockout prevention, or deployed production performance was measured.
+
+## Optional trained ML result — synthetic only
+
+The optional RandomForest recursive benchmark passed three dedicated unit tests in [GitHub Actions](https://github.com/harshakavali81-collab/Predictive-Inventory-Dynamic-Pricing/actions/runs/40659428133). For the **ELEC-101 28-day synthetic holdout only**, RandomForest WAPE = **9.328%**, seasonal-naive WAPE = **11.992%**. The result was obtained with fixed hyperparameters and strict historical lag features; it cannot be extrapolated to other products or real stores. The trained model is intentionally separate from the main application model-selection process.

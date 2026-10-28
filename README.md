@@ -41,13 +41,13 @@
 
 ## Latest expanded CI verification
 
-**29 Python and API tests passed** in [the expanded GitHub Actions run](https://github.com/harshakavali81-collab/Predictive-Inventory-Dynamic-Pricing/actions/runs/40656569570). The run generated a SQLite database, 3,360 synthetic sales rows, five BI tables and a 28-day forecast per SKU. These checks verify the synthetic prototype, not external business performance.
+**29 Python and API tests passed** in [the expanded GitHub Actions run](https://github.com/harshakavali81-collab/Predictive-Inventory-Dynamic-Pricing/actions/runs/40656569570). The run generated a SQLite database, 3,360 synthetic sales rows, seven BI tables and a 28-day forecast per SKU. These checks verify the synthetic prototype, not external business performance.
 
 ## Latest verified additions
 
 - **Direct Python-dashboard connection:** When the generated `frontend/report.json` is present, the browser visualizes the Python 28-day forecasts and their sealed-holdout WAPE rather than its offline fallback; CSV export is enabled in that mode.
 - **SQL warehouse:** SQLite views and [analytical SQL queries](sql/queries.sql), with constraints and repeatable local exports.
-- **BI exports:** Five Power BI-ready [star-schema tables](powerbi/README.md) are generated under `data/generated/bi/`; no native PBIX is claimed.
+- **BI exports:** Seven Power BI-ready [star-schema tables](powerbi/README.md) are generated under `data/generated/bi/`; no native PBIX is claimed.
 - **Local private ingestion:** `python -m scripts.run_pipeline --input /path/to/authorized.csv --output data/generated/local_report.json --sqlite data/generated/local.sqlite` checks schema and complete SKU histories. Imported data is **not** copied into the public frontend.
 - **Deployment:** [GitHub Pages public-demo workflow](.github/workflows/pages.yml), plus [Docker local API/demo](docs/DEPLOYMENT.md). Production deployment and actual merchant integration are separate requirements.
 
@@ -139,6 +139,12 @@ Figures are original explanatory SVGs with illustrative patterns, **not captured
 ## Verified synthetic results
 
 GitHub Actions completed **18 passing Python/API tests** and generated **3,360 deterministic synthetic rows across 8 SKUs**. On the final 28-day holdout, the selected-model WAPE ranged from **10.006% to 20.296%** across the eight synthetic products. These are illustrative model-validation results, **not evidence of real-store accuracy**. See [all eight verified SKU results](docs/VERIFIED_RESULTS.md) and [the CI run](https://github.com/harshakavali81-collab/Predictive-Inventory-Dynamic-Pricing/actions/runs/40654347916).
+
+## Trained machine-learning benchmark — verified
+
+An optional, self-contained **scikit-learn Random Forest** recursive forecaster is included in [the ML benchmark module](src/forecasting/ml_benchmark.py). The dedicated [GitHub Actions run](https://github.com/harshakavali81-collab/Predictive-Inventory-Dynamic-Pricing/actions/runs/40659428133) passed **3 ML tests** and measured **9.328% WAPE** for the trained model versus **11.992% WAPE** for seasonal-naive on the *same synthetic ELEC-101 28-day holdout*. This is a limited single-SKU synthetic result, not a claim of real-world accuracy or broad model superiority.
+
+Run `pip install -r requirements-ml.txt` followed by `python -m scripts.run_ml_benchmark`. See [ML methodology and no-leakage safeguards](docs/ML_BENCHMARK.md). The production-facing/main prototype retains its separate, transparent validation-selected forecast models.
 
 ## Model & business interpretation
 
